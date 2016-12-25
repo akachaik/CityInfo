@@ -32,7 +32,7 @@ namespace CityInfo.API
             {
                 app.UseExceptionHandler();
             }
-
+            app.UseStatusCodePages();
             app.UseMvcWithDefaultRoute();
 
             //app.Run(context =>
