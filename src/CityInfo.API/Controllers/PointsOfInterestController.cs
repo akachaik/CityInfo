@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CityInfo.API.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfo.API.Controllers
@@ -114,6 +115,60 @@ namespace CityInfo.API.Controllers
 
             poi.Name = pointOfInterest.Name;
             poi.Description = pointOfInterest.Description;
+
+            return NoContent();
+
+        }
+
+        [HttpPatch("{cityId}/pointsofinterest/{id}")]
+        public IActionResult PartiallyUpdatePointOfInterest(int cityId, int id
+            , [FromBody] JsonPatchDocument<PointOfInterestForUpdateDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                return BadRequest();
+            }
+
+            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            if (city == null)
+            {
+                return NotFound();
+            }
+
+            var poiFromStore = city.PointsOfInterest.FirstOrDefault(c => c.Id == id);
+            if (poiFromStore == null)
+            {
+                NotFound();
+            }
+
+            var poiToPatch = new PointOfInterestForUpdateDto()
+            {
+                Name = poiFromStore.Name,
+                Description = poiFromStore.Description
+            };
+
+            patchDoc.ApplyTo(poiToPatch, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (poiToPatch.Name == poiToPatch.Description)
+            {
+                ModelState.AddModelError("Description", "The provided description shoud be different from the name");
+            }
+
+            TryValidateModel(poiToPatch);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+
+            poiFromStore.Name = poiToPatch.Name;
+            poiFromStore.Description = poiToPatch.Description;
 
             return NoContent();
 
