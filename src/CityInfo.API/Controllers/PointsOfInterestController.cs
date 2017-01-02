@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using CityInfo.API.Entities;
 
 namespace CityInfo.API.Controllers
 {
@@ -91,24 +92,31 @@ namespace CityInfo.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            // var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            var max = CitiesDataStore.Current.Cities.SelectMany(
-                c => c.PointsOfInterest).Max(p => p.Id);
-            var pt = new PointOfInterestDto
+            //var max = CitiesDataStore.Current.Cities.SelectMany(
+            //    c => c.PointsOfInterest).Max(p => p.Id);
+            //var pt = new PointOfInterestDto
+            //{
+            //    Id = ++max,
+            //    Name = pointOfInterest.Name,
+            //    Description = pointOfInterest.Description
+            //};
+
+            var finalPoi = AutoMapper.Mapper.Map<PointOfInterest>(pointOfInterest);
+            _cityInfoRepository.AddPointOfInterestForCity(cityId, finalPoi);
+
+            if (!_cityInfoRepository.Save())
             {
-                Id = ++max,
-                Name = pointOfInterest.Name,
-                Description = pointOfInterest.Description
-            };
+                return StatusCode(500, "A problem happened while handling your request.");
+            }
 
-            city.PointsOfInterest.Add(pt);
-
-            return CreatedAtRoute("GetPointOfInterest", new {cityId = cityId, id = pt.Id}, pt);
+            var createdPoiToReturn = AutoMapper.Mapper.Map<PointOfInterestDto>(finalPoi);
+            return CreatedAtRoute("GetPointOfInterest", new {cityId = cityId, id = createdPoiToReturn.Id}, createdPoiToReturn);
         }
 
         [HttpPut("{cityId}/pointsofinterest/{id}")]
