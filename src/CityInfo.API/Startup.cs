@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CityInfo.API.Entities;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.Builder;
@@ -83,6 +84,12 @@ namespace CityInfo.API
             app.UseStatusCodePages();
             app.UseMvcWithDefaultRoute();
 
+            AutoMapper.Mapper.Initialize(config =>
+            {
+                config.CreateMap<City, CityWithoutPoiDto>();
+                config.CreateMap<City, CityDto>();
+                config.CreateMap<PointOfInterest, PointOfInterestDto>();
+            });
             //app.Run(context =>
             //{
             //    throw new Exception("test");
@@ -95,4 +102,8 @@ namespace CityInfo.API
             //});
         }
     }
+}
+
+namespace CityInfo.API.Models
+{
 }
