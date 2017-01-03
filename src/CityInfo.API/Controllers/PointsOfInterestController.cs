@@ -169,23 +169,24 @@ namespace CityInfo.API.Controllers
                 return BadRequest();
             }
 
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            var poiFromStore = city.PointsOfInterest.FirstOrDefault(c => c.Id == id);
-            if (poiFromStore == null)
+            var poiEntity = _cityInfoRepository.GetPointOfInterest(cityId, id);
+            if (poiEntity == null)
             {
                 return NotFound();
             }
 
-            var poiToPatch = new PointOfInterestForUpdateDto()
-            {
-                Name = poiFromStore.Name,
-                Description = poiFromStore.Description
-            };
+            //var poiToPatch = new PointOfInterestForUpdateDto()
+            //{
+            //    Name = poiFromStore.Name,
+            //    Description = poiFromStore.Description
+            //};
+
+            var poiToPatch = AutoMapper.Mapper.Map<PointOfInterestForUpdateDto>(poiEntity);
 
             patchDoc.ApplyTo(poiToPatch, ModelState);
 
@@ -207,8 +208,15 @@ namespace CityInfo.API.Controllers
             }
 
 
-            poiFromStore.Name = poiToPatch.Name;
-            poiFromStore.Description = poiToPatch.Description;
+            //poiFromStore.Name = poiToPatch.Name;
+            //poiFromStore.Description = poiToPatch.Description;
+
+            AutoMapper.Mapper.Map(poiToPatch, poiEntity);
+
+            if (!_cityInfoRepository.Save())
+            {
+                return StatusCode(500, "A problem happened while handling your request");
+            }
 
             return NoContent();
 
