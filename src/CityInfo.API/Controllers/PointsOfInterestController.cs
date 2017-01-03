@@ -175,7 +175,7 @@ namespace CityInfo.API.Controllers
             var poiFromStore = city.PointsOfInterest.FirstOrDefault(c => c.Id == id);
             if (poiFromStore == null)
             {
-                NotFound();
+                return NotFound();
             }
 
             var poiToPatch = new PointOfInterestForUpdateDto()
