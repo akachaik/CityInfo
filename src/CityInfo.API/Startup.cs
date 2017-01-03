@@ -90,6 +90,7 @@ namespace CityInfo.API
                 config.CreateMap<City, CityDto>();
                 config.CreateMap<PointOfInterest, PointOfInterestDto>();
                 config.CreateMap<PointOfInterestForCreationDto, PointOfInterest>();
+                config.CreateMap<PointOfInterestForUpdateDto, PointOfInterest>();
             });
             //app.Run(context =>
             //{
