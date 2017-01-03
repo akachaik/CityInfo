@@ -225,21 +225,25 @@ namespace CityInfo.API.Controllers
         [HttpDelete("{cityId}/pointsofinterest/{id}")]
         public IActionResult DeletePointOfInterest(int cityId, int id)
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            var poiFromStore = city.PointsOfInterest.FirstOrDefault(c => c.Id == id);
-            if (poiFromStore == null)
+            var poiEntity = _cityInfoRepository.GetPointOfInterest(cityId, id);
+            if (poiEntity == null)
             {
                 return NotFound();
             }
 
-            city.PointsOfInterest.Remove(poiFromStore);
+            _cityInfoRepository.DeletePointOfInterest(poiEntity);
 
-            _mailService.SendMail("Point of interest deleted", $"POI {poiFromStore.Name} with id {poiFromStore.Id} was deleted.");
+            if (!_cityInfoRepository.Save())
+            {
+                return StatusCode(500, "A prolem happened while handling your request.");
+            }
+
+            _mailService.SendMail("Point of interest deleted", $"POI {poiEntity.Name} with id {poiEntity.Id} was deleted.");
 
             return NoContent();
         }
